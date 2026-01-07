@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}
+  Sheet Music - {{ sheet_music.title }}
+{% endblock %}
+
+{% block content %}
+  <h2>{{ sheet_music.title }}</h2>
+  <p><strong>Composer:</strong> {{ sheet_music.composer.name }}</p>
+  <p><strong>Genre:</strong> {{ sheet_music.genre }}</p>
+  <p><strong>Description:</strong> {{ sheet_music.description }}</p>
+  <p><strong>Price:</strong> R{{ sheet_music.price }}</p>
+  <p><strong>Uploaded at:</strong> {{ sheet_music.created_at }}</p>
+
+  {% if sheet_music.image and sheet_music.image.name %}
+    <div class="sheetmusic-preview-wrapper">
+      <img src="{{ sheet_music.image.url }}" alt="{{ sheet_music.title }}" class="sheetmusic-preview">
+    </div>
+  {% else %}
+    <p>No image available</p>
+  {% endif %}
+
+  <form method="post" action="{% url 'add_item_to_cart' product_id=sheet_music.pk %}">
+    {% csrf_token %}
+    <input type="number" name="quantity" value="1" min="1">
+    <button type="submit">Add to Cart</button>
+  </form>
+
+  <div id="link-center">
+    {% if perms.set_list.change_sheetmusic %}
+      <a href="{% url 'music_update' pk=sheet_music.pk %}">Update Sheet Music</a>
+    {% endif %}
+    {% if perms.set_list.delete_sheetmusic %}
+      <a href="{% url 'music_delete' pk=sheet_music.pk %}">Delete Sheet Music</a>
+    {% endif %}
+    <a href="{% url 'collection_detail' sheet_music.collection.pk %}">Back to Music List</a>
+  </div>
+
+  <hr>
+
+  <h3>Reviews</h3>
+  {% if reviews %}
+    <ul>
+      {% for review in reviews %}
+        <li>
+          <strong>{{ review.user.username }}</strong>
+          {% if review.verified %}
+            <span style="color: green;">(Verified Purchase)</span>
+          {% else %}
+            <span style="color: gray;">(Unverified)</span>
+          {% endif %}
+          <br>
+          {{ review.comment }}
+          <br>
+          <small>Posted on {{ review.created_at|date:"Y-m-d H:i" }}</small>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No reviews yet.</p>
+  {% endif %}
+
+  {% if not is_composer and not has_reviewed %}
+    <h4>Leave a Review</h4>
+    <form method="post">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit">Submit Review</button>
+    </form>
+  {% elif not is_composer and has_reviewed %}
+    <p><em>You have already submitted a review for this product.</em></p>
+  {% endif %}
+{% endblock %}

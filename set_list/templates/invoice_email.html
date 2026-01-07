@@ -1,0 +1,29 @@
+<h2>Invoice for {{ user.username }}</h2>
+<p>Thank you for your purchase!</p>
+
+<table border="1" cellspacing="0" cellpadding="6">
+  <thead>
+    <tr>
+      <th>Title</th>
+      <th>Quantity</th>
+      <th>Unit Price</th>
+      <th>Total</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in items %}
+    <tr>
+      <td>{{ item.product.title }}</td>
+      <td>{{ item.quantity }}</td>
+      <td>R{{ item.product.price }}</td>
+      <td>R{{ item.total }}</td>
+    </tr>
+    {% endfor %}
+    <tr>
+      <td colspan="3"><strong>Grand Total</strong></td>
+      <td><strong>R{{ total }}</strong></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>If you have any questions, feel free to reply to this email.</p>

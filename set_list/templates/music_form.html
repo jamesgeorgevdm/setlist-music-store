@@ -1,0 +1,29 @@
+{% extends 'base.html' %} 
+{% block title %} 
+  Music Details - 
+  {% if form.instance.pk %} 
+    Edit 
+  {% else %} 
+    Create 
+  {% endif %} 
+  Post 
+{% endblock %} 
+{% block content %} 
+  <h2> 
+    {% if form.instance.pk %} 
+      Edit 
+    {% else %} 
+      Create 
+    {% endif %} 
+    Post 
+  </h2> 
+  <form method="post" 
+        action="{% if form.instance.pk %}{% url 'music_update' pk=form.instance.pk %}{% else %}{% url 'music_create' %}{% endif %}"> 
+    {% csrf_token %} 
+    {{ form.as_p }} 
+    <button type="submit"> 
+      Save 
+    </button> 
+  </form> 
+  <a href="{% url 'collection_detail' form.instance.collection.pk %}">Back to Music List</a>
+{% endblock %} 

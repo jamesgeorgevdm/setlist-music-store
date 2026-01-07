@@ -1,0 +1,13 @@
+# Environment / Secrets
+.env
+
+# Uploaded media files
+media/
+
+# Python cache / compiled files
+__pycache__/
+*.pyc
+
+# Virtual environment
+venv/
+env/

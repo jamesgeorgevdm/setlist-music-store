@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h2>Collection: {{ collection.title }}</h2>
+<p>{{ collection.description }}</p>
+<p>Owned by: {{ collection.composer.username }}</p>
+
+{% if collection.image and collection.image.name %}
+  <div class="collection-preview-wrapper">
+    <img src="{{ collection.image.url }}" alt="{{ collection.title }}" class="collection-preview">
+  </div>
+{% endif %}
+
+<hr>
+
+<h3>Sheet Music in this Collection</h3>
+
+{% if sheet_music_list %}
+  <div class="sheetmusic-grid">
+    {% for sheet_music in sheet_music_list %}
+      <div class="sheetmusic-card">
+        {% if sheet_music.image and sheet_music.image.name %}
+          <img src="{{ sheet_music.image.url }}" alt="{{ sheet_music.title }}" class="sheetmusic-thumb">
+        {% endif %}
+        <h4>{{ sheet_music.title }}</h4>
+        <p><strong>Genre:</strong> {{ sheet_music.genre }}</p>
+        <p><strong>Price:</strong> R{{ sheet_music.price }}</p>
+        <a href="{% url 'music_detail' pk=sheet_music.pk %}" class="view-link">View Details</a>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <p>No sheet music available.</p>
+{% endif %}
+
+
+<hr>
+
+{% if can_add_music %}
+  <h3>Add New Sheet Music to Collection</h3>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Add Sheet Music</button>
+  </form>
+{% endif %}
+
+<a href="{% url 'collection_list' %}">Back to Collections</a>
+
+{% endblock %}

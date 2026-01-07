@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h2>All Collections</h2>
+
+{% if user.is_authenticated and user.groups.all.0.name == "composer" %}
+  <h3>Add New Collection</h3>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Add Collection</button>
+  </form>
+  <hr>
+{% endif %}
+
+<ul class="collections-list">
+  {% for collection in collections %}
+    <li style="margin-bottom: 25px;">
+      <strong>
+        <a class="collection-title" href="{% url 'collection_detail' collection.pk %}">{{ collection.title }}</a>
+      </strong><br>
+      {{ collection.description }}
+
+      {% if collection.image and collection.image.name %}
+        <div class="collection-preview-wrapper">
+          <img src="{{ collection.image.url }}" class="collection-preview" alt="{{ collection.title }}">
+        </div>
+      {% endif %}
+
+      {% if user == collection.composer %}
+      <div>
+        <a href="{% url 'collection_edit' pk=collection.pk %}">Edit</a> |
+        <form class="inline-form" action="{% url 'collection_delete' pk=collection.pk %}" method="post" style="display:inline;">
+          {% csrf_token %}
+          <button type="submit" class="link-style" onclick="return confirm('Are you sure you want to delete this collection?');">Delete</button>
+        </form>
+      </div>
+      {% endif %}
+    </li>
+  {% empty %}
+    <li>No collections available.</li>
+  {% endfor %}
+</ul>
+
+{% endblock %}
