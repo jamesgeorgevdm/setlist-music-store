@@ -96,6 +96,21 @@ The application uses a custom global stylesheet (`style.css`) focused on clarity
 
 ---
 
+## Production Notes
+
+- Deployed on Render using Gunicorn
+- Environment variables used for secrets
+- MySQL database hosted externally
+- Static files collected and served in production
+- DEBUG disabled in production
+
+---
+
+## Live Demo
+https://setlist.onrender.com
+
+---
+
 ## Environment Configuration
 
 Create a virtual environment and install dependencies:
