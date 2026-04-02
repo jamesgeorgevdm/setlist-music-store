@@ -22,6 +22,7 @@ from datetime import datetime, timedelta
 from hashlib import sha1
 import secrets
 
+from .twitter_auth import post_tweet
 from .models import Composer, SheetMusic, Collection, ResetToken, Review, Purchase
 from .forms import SheetMusicForm, CollectionForm, ReviewForm
 
@@ -160,10 +161,6 @@ def verify_password(password):
 
 @login_required
 def collection_list(request):
-    """
-    Displays a list of all collections on the platform.
-    If user is a composer, displays a form to add a new collection.
-    """
     collections = Collection.objects.all()
     form = None
 
@@ -174,6 +171,14 @@ def collection_list(request):
                 new_collection = form.save(commit=False)
                 new_collection.composer = request.user
                 new_collection.save()
+                try:
+                    message = f"New music collection available: {new_collection.name}!"
+                    post_tweet(message)
+                except Exception as e:
+                    # Logs to Render console, but allows the redirect to happen
+                    print(f"Twitter Auto-Post Failed: {e}")
+                    messages.warning(request, "Collection created, but Twitter is currently unavailable.")
+                
                 return redirect("collection_list")
         else:
             form = CollectionForm()
@@ -472,28 +477,23 @@ def checkout(request):
             "total": total,
         },
     )
+    # Send invoice email with safety net
+    try:
+        send_mail(
+            subject="Your Sheet Music Invoice",
+            message="Your invoice is attached.",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[request.user.email],
+            html_message=invoice_html,
+        )
+    except Exception as e:
+        print(f"Email Delivery Failed: {e}")
+        messages.error(request, "Purchase confirmed, but we couldn't email your invoice. Please contact support.")
 
-    # Send invoice email
-    send_mail(
-        subject="Your Sheet Music Invoice",
-        message="Your invoice is attached.",
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[request.user.email],
-        html_message=invoice_html,
-    )
-
-    # Clear the cart
+    # Clear the cart even if email fails
     request.session["cart"] = {}
 
-    return render(
-        request,
-        "cart.html",
-        {
-            "message": "Checkout successful! An invoice has been emailed to you.",
-            "items": [],
-            "total": 0,
-        },
-    )
+    return render(request, "cart.html", {"message": "Success! (Note: Check 'Messages' for email status)"})
 
 
 # Forgot Password Section
@@ -525,14 +525,20 @@ def generate_reset_url(user):
 
 
 def send_password_reset(request):
-    """Handles sending the password reset email."""
-    user_email = request.POST.get("email")
-    user = User.objects.get(email=user_email)
-    url = generate_reset_url(user)
-    email = build_email(user, url)
-    email.send()
+    try:
+        user_email = request.POST.get("email")
+        user = User.objects.get(email=user_email)
+        url = generate_reset_url(user)
+        email = build_email(user, url)
+        email.send()
+        messages.success(request, "Reset link sent! Please check your inbox.")
+    except User.DoesNotExist:
+        messages.error(request, "No account found with that email.")
+    except Exception as e:
+        print(f"Password Reset Email Failed: {e}")
+        messages.error(request, "We encountered an error sending the email. Please try again later.")
+    
     return HttpResponseRedirect(reverse("auth"))
-
 
 def reset_user_password(request, token):
     """Handles the password reset process."""
